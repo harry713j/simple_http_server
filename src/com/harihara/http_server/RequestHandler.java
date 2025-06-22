@@ -1,9 +1,6 @@
 package com.harihara.http_server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -29,39 +26,38 @@ public class RequestHandler implements Runnable {
             String method = tokens[0];
             String path = tokens[1];
 
-            if (!method.equals("GET")) {
-                sendResponse(out, 405, "Method Not Allowed", "Only GET is supported.");
-                return;
+            HttpRequest request = new HttpRequest(method, path);
+
+            // parse header
+            String line;
+
+            while (!(line = in.readLine()).isEmpty()){
+                String[] headerParts = line.split(":", 2);
+
+                if (headerParts.length == 2){
+                    request.addHeader(headerParts[0], headerParts[1]);
+                }
             }
 
-            if (path.equals("/")) path = "/index.html";
-            String filePath = "src/public" + path;
+            String filePath = "src/public" + (request.getPath().equals("/") ? "/index.html" : request.getPath());
 
-            if (Files.exists(Paths.get(filePath))) {
+            HttpResponse response;
+
+            if (Files.exists(Paths.get(filePath))){
                 byte[] content = Files.readAllBytes(Paths.get(filePath));
-                sendResponse(out, 200, "OK", content, "text/html");
+                response = new HttpResponse(200, "OK", content);
+                response.addHeader("Content-Type", "text/html");
             } else {
-                sendResponse(out, 404, "Not Found", "File not found.");
+                String message = "<h1>404 Not Found</h1>"; // replace with html file
+                response = new HttpResponse(404, "Not Found", message.getBytes());
+                response.addHeader("Content-Type", "text/html");
             }
+
+            response.write(out);
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void sendResponse(OutputStream out, int statusCode, String statusText, String body) throws IOException {
-        String response = "HTTP/1.1 " + statusCode + " " + statusText + "\r\n" +
-                "Content-Type: text/plain\r\n" +
-                "Content-Length: " + body.length() + "\r\n\r\n" +
-                body;
-        out.write(response.getBytes());
-    }
-
-    private void sendResponse(OutputStream out, int statusCode, String statusText, byte[] body, String contentType) throws IOException {
-        String headers = "HTTP/1.1 " + statusCode + " " + statusText + "\r\n" +
-                "Content-Type: " + contentType + "\r\n" +
-                "Content-Length: " + body.length + "\r\n\r\n";
-        out.write(headers.getBytes());
-        out.write(body);
-    }
 }
