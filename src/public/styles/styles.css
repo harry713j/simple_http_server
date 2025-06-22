@@ -1,0 +1,18 @@
+
+*{
+    padding: 0px;
+    margin: 0px;
+    box-style: border-box;
+}
+
+h1{
+    text: 48px;
+    font-weight: 700;
+    color: red;
+}
+
+p{
+    text: 18px;
+    font-weight: 500;
+    color: green;
+}

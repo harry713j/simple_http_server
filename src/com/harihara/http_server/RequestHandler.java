@@ -46,7 +46,7 @@ public class RequestHandler implements Runnable {
             if (Files.exists(Paths.get(filePath))){
                 byte[] content = Files.readAllBytes(Paths.get(filePath));
                 response = new HttpResponse(200, "OK", content);
-                response.addHeader("Content-Type", "text/html");
+                response.addHeader("Content-Type", getMimeType(filePath));
             } else {
                 String message = "<h1>404 Not Found</h1>"; // replace with html file
                 response = new HttpResponse(404, "Not Found", message.getBytes());
@@ -59,5 +59,16 @@ public class RequestHandler implements Runnable {
             e.printStackTrace();
         }
     }
+
+    private String getMimeType(String path) {
+        if (path.endsWith(".html")) return "text/html";
+        if (path.endsWith(".css")) return "text/css";
+        if (path.endsWith(".js")) return "application/javascript";
+        if (path.endsWith(".json")) return "application/json";
+        if (path.endsWith(".png")) return "image/png";
+        if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
+        return "application/octet-stream";
+    }
+
 
 }
